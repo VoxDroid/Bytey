@@ -24,7 +24,7 @@ export default function StatsPanel() {
   }
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 w-full h-full">
       <motion.div variants={item} className="grid grid-cols-2 gap-4">
         <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
           <div className="flex items-center mb-2">
@@ -47,7 +47,7 @@ export default function StatsPanel() {
         </div>
       </motion.div>
 
-      <motion.div variants={item} className="space-y-3">
+      <motion.div variants={item} className="space-y-3 flex-1">
         <h3 className="font-medium">Pet Stats</h3>
 
         <div className="space-y-2">

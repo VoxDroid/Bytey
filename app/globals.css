@@ -135,9 +135,16 @@
   }
 }
 
-/* Improved scrollbar styling */
+/* Fix scrollbar visibility and panel scrolling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  overflow-y: auto;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -155,9 +162,28 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Fullscreen mode */
-body.fullscreen-active {
-  overflow: hidden;
+/* Completely separate scrolling for container mode vs fullscreen mode */
+/* Container mode - fixed height with scrolling */
+.container-mode .panel-scroll-container {
+  height: 100%;
+  max-height: 556px; /* 700px - 144px (header + tabs + action buttons) */
+  overflow-y: auto;
+  padding: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure animations don't cause content to disappear */
+.panel-scroll-container > div {
+  min-height: 100%;
+}
+
+/* Fullscreen mode - use viewport height */
+.fullscreen .panel-scroll-container {
+  height: calc(100vh - 144px);
+  max-height: calc(100vh - 144px);
+  overflow-y: auto;
+  padding: 1rem;
 }
 
 /* Game container */
@@ -174,12 +200,85 @@ body.fullscreen-active {
   .game-container {
     min-height: 500px;
   }
+
+  .container-mode .panel-scroll-container {
+    padding: 0.5rem;
+    max-height: 456px; /* Adjusted for smaller screens */
+  }
+
+  .fullscreen .panel-scroll-container {
+    padding: 0.5rem;
+  }
 }
 
-/* Ensure the game fills the screen in fullscreen mode */
+/* Update the fullscreen mode styles to ensure it fills the entire screen */
 .fullscreen .game-container {
   height: 100vh;
   width: 100vw;
+  max-height: 100vh;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+/* Fix panel height to ensure scrolling works correctly */
+.h-full.overflow-y-auto.custom-scrollbar {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+/* Fullscreen mode */
+body.fullscreen-active {
+  overflow: hidden;
+}
+
+/* Add these new styles for fullscreen mode */
+@media (display-mode: fullscreen) {
+  .game-container {
+    height: 100vh;
+    width: 100vw;
+    max-height: 100vh;
+    max-width: 100vw;
+  }
+
+  /* Ensure panels fill the available height in fullscreen */
+  .panel-container {
+    height: calc(100vh - 144px);
+    max-height: none;
+  }
+}
+
+/* Fix panel scrolling height */
+[class*="panel"] {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the pet container fills available space */
+.pet-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove any bottom spacing */
+.action-buttons-container {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Fix full screen mode to ensure it extends to the full viewport */
+.fixed.inset-0 {
+  height: 100vh;
+  width: 100vw;
+  max-height: 100vh;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+.fixed.inset-0 > div {
+  height: 100%;
+  width: 100%;
 }
 
 /* Improve light theme compatibility */
@@ -197,62 +296,6 @@ body.fullscreen-active {
   color: hsl(var(--pet-text-dark));
 }
 
-/* Collectible card styles */
-.collectible-card {
-  transition: all 0.3s ease;
-  transform-style: preserve-3d;
-}
-
-.collectible-card:hover {
-  transform: translateY(-10px) rotateY(10deg);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
-}
-
-.collectible-card.rare {
-  background: linear-gradient(135deg, #4a00e0, #8e2de2);
-}
-
-.collectible-card.epic {
-  background: linear-gradient(135deg, #8e2de2, #e94057);
-}
-
-.collectible-card.legendary {
-  background: linear-gradient(135deg, #f5af19, #f12711);
-}
-
-.collectible-card.mythic {
-  background: linear-gradient(135deg, #00c6ff, #0072ff);
-}
-
-.collectible-shine {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.1) 25%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0.1) 75%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  pointer-events: none;
-  z-index: 10;
-  background-size: 200% 200%;
-  animation: shine 3s infinite linear;
-}
-
-@keyframes shine {
-  0% {
-    background-position: 0% 0%;
-  }
-  100% {
-    background-position: 200% 200%;
-  }
-}
-
 /* Trading interface styles */
 .trade-offer {
   transition: all 0.3s ease;
@@ -267,14 +310,43 @@ body.fullscreen-active {
   animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.1);
-  }
+/* Collectible card styles */
+.collectible-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.collectible-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.collectible-card-image {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collectible-card-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.collectible-card-footer {
+  margin-top: auto;
+}
+
+/* Add styles for the floating button */
+.floating-button {
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.5));
+  transition: all 0.3s ease;
+}
+
+.floating-button:hover {
+  transform: scale(1.1);
 }

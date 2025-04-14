@@ -22,7 +22,7 @@ export default function GameTabs({ activeTab, setActiveTab }: GameTabsProps) {
   ]
 
   return (
-    <div className="grid grid-cols-9 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-t border-b border-white/20">
+    <div className="grid grid-cols-9 bg-black border-b border-white/10 h-[72px]">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -31,13 +31,13 @@ export default function GameTabs({ activeTab, setActiveTab }: GameTabsProps) {
             activeTab === tab.id ? "text-white" : "text-white/60 hover:text-white/90"
           }`}
         >
-          <div className={`${activeTab === tab.id ? "text-primary" : ""}`}>{tab.icon}</div>
+          <div className={`${activeTab === tab.id ? "text-white" : ""}`}>{tab.icon}</div>
           <span className="text-xs mt-1">{tab.label}</span>
 
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTab"
-              className="absolute bottom-0 left-0 right-0 h-1 bg-primary"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-white"
               initial={false}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
@@ -46,7 +46,7 @@ export default function GameTabs({ activeTab, setActiveTab }: GameTabsProps) {
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTabBg"
-              className="absolute inset-0 bg-blue-500/20 -z-10"
+              className="absolute inset-0 bg-white/5 -z-10"
               initial={false}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />

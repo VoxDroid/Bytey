@@ -7,9 +7,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "CodePet - Virtual Coding Companion",
+  title: "Bytey - Virtual Coding Companion",
   description: "A virtual pet that grows as you code",
-    generator: 'v0.dev'
+  generator: "VoxDroid",
 }
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-6">
             {children}
           </div>
         </ThemeProvider>
@@ -29,6 +29,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
-import './globals.css'

@@ -18,7 +18,20 @@ import PetEvolutionPanel from "./panels/pet-evolution-panel"
 import TrophiesPanel from "./panels/trophies-panel"
 import { AnimatePresence, motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trophy, Sparkles, Heart, Utensils, X, Coins, Maximize2, Minimize2, Check } from "lucide-react"
+import {
+  Trophy,
+  Sparkles,
+  Heart,
+  Utensils,
+  X,
+  Coins,
+  Maximize2,
+  Minimize2,
+  Check,
+  Zap,
+  Brain,
+  Coffee,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import CollectiblesPanel from "./panels/collectibles-panel"
 import TradingPanel from "./panels/trading-panel"
@@ -108,7 +121,7 @@ export default function CodePetGame() {
   // Time-based effects
   useEffect(() => {
     const timer = setInterval(() => {
-      // Slowly decrease energy and happiness over time
+      // Slowly decrease all stats over time at different rates
       if (energy > 0) {
         setEnergy(Math.max(0, energy - 0.5))
       }
@@ -117,12 +130,20 @@ export default function CodePetGame() {
         setHappiness(Math.max(0, happiness - 0.3))
       }
 
+      if (health > 0) {
+        setHealth(Math.max(0, health - 0.1)) // Health decreases very slowly
+      }
+
+      if (intelligence > 0) {
+        setIntelligence(Math.max(0, intelligence - 0.2)) // Intelligence decreases slowly if not used
+      }
+
       // Update mood based on energy and happiness
       updateMood()
     }, 30000) // Every 30 seconds
 
     return () => clearInterval(timer)
-  }, [energy, happiness, setEnergy, setHappiness])
+  }, [energy, happiness, health, intelligence, setEnergy, setHappiness, setHealth, setIntelligence])
 
   // Update mood based on pet stats with more varied expressions
   const updateMood = () => {
@@ -212,6 +233,11 @@ export default function CodePetGame() {
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
+    if (!isFullscreen) {
+      document.documentElement.style.overflow = "hidden"
+    } else {
+      document.documentElement.style.overflow = ""
+    }
   }
 
   // Pet interactions
@@ -235,8 +261,12 @@ export default function CodePetGame() {
       const newExp = exp + sessionXp
       setExp(newExp)
       setStreak(streak + 1)
-      setEnergy(Math.max(0, energy - 10)) // Coding uses energy
-      setIntelligence(Math.min(100, intelligence + 2)) // Coding increases intelligence
+
+      // Affect multiple stats
+      setEnergy(Math.max(0, energy - 15)) // Coding uses more energy
+      setIntelligence(Math.min(100, intelligence + 3)) // Coding increases intelligence
+      setHappiness(Math.max(0, happiness - 5)) // Coding decreases happiness a bit
+      setHealth(Math.max(0, health - 2)) // Slight health decrease from sitting
 
       const coinReward = Math.floor(Math.random() * 5) + 1 + Math.floor(level / 2)
       setCoins(coins + coinReward)
@@ -332,8 +362,12 @@ export default function CodePetGame() {
 
     setTimeout(() => {
       setMood("neutral")
+      // Affect multiple stats
       setEnergy(Math.min(100, energy + 15))
       setHappiness(Math.min(100, happiness + 10))
+      setHealth(Math.min(100, health + 5)) // Break helps health a bit
+      setIntelligence(Math.max(0, intelligence - 2)) // Slight intelligence decrease from not studying
+
       showNotification(`${petName} is taking a relaxing break`)
       setIsAnimating(false)
 
@@ -352,8 +386,12 @@ export default function CodePetGame() {
 
     setTimeout(() => {
       setMood("tired")
-      setEnergy(100)
-      setHealth(Math.min(100, health + 10))
+      // Affect multiple stats
+      setEnergy(100) // Full energy restore
+      setHealth(Math.min(100, health + 15))
+      setHappiness(Math.min(100, happiness + 5))
+      setIntelligence(Math.max(0, intelligence - 5)) // Intelligence decreases from not using brain
+
       showNotification(`${petName} is sleeping. Energy fully restored!`)
       setIsAnimating(false)
 
@@ -377,8 +415,12 @@ export default function CodePetGame() {
 
     setTimeout(() => {
       setMood("excited")
-      setEnergy(Math.max(0, energy - 15))
+      // Affect multiple stats
+      setEnergy(Math.max(0, energy - 20))
       setHappiness(Math.min(100, happiness + 25))
+      setHealth(Math.min(100, health + 10)) // Playing is good for health
+      setIntelligence(Math.min(100, intelligence + 2)) // Playing can be educational
+
       showNotification(`${petName} had fun playing!`)
       setIsAnimating(false)
 
@@ -402,8 +444,13 @@ export default function CodePetGame() {
 
     setTimeout(() => {
       setMood("neutral")
-      setEnergy(Math.max(0, energy - 20))
+      // Affect multiple stats
+      setEnergy(Math.max(0, energy - 25))
       setIntelligence(Math.min(100, intelligence + 15))
+      setHappiness(Math.max(0, happiness - 10)) // Training is hard work
+      setHealth(Math.max(0, health - 5)) // Training is  happiness - 10)) // Training is hard work
+      setHealth(Math.max(0, health - 5)) // Training is tiring
+
       showNotification(`${petName} learned new skills through training!`)
       setIsAnimating(false)
 
@@ -421,7 +468,10 @@ export default function CodePetGame() {
   const handlePet = () => {
     setIsAnimating(true)
     setMood("happy")
+    // Affect multiple stats
     setHappiness(Math.min(100, happiness + 15))
+    setEnergy(Math.max(0, energy - 2)) // Slight energy cost
+    setHealth(Math.min(100, health + 2)) // Petting is good for health
 
     setTimeout(() => {
       showNotification(`${petName} feels loved!`)
@@ -434,11 +484,12 @@ export default function CodePetGame() {
     setShowFeedingAnimation(true)
 
     setTimeout(() => {
+      // Affect multiple stats
       setHealth(Math.min(100, health + 20))
       setEnergy(Math.min(100, energy + 10))
-      setHappiness(Math.min(100, health + 20))
-      setEnergy(Math.min(100, energy + 10))
       setHappiness(Math.min(100, happiness + 5))
+      setIntelligence(Math.max(0, intelligence - 2)) // Food coma affects intelligence
+
       showNotification(`${petName} enjoyed the meal!`)
       setIsAnimating(false)
       setShowFeedingAnimation(false)
@@ -450,54 +501,108 @@ export default function CodePetGame() {
 
     setTimeout(() => {
       const trickXp = 5 + Math.floor(intelligence / 10)
+      // Affect multiple stats
       setExp(exp + trickXp)
       setIntelligence(Math.min(100, intelligence + 5))
-      setEnergy(Math.max(0, energy - 5))
+      setEnergy(Math.max(0, energy - 10))
+      setHappiness(Math.min(100, happiness + 5))
+      setHealth(Math.max(0, health - 3)) // Tricks can be tiring
+
       showNotification(`${petName} performed a trick! +${trickXp} XP`)
       setIsAnimating(false)
     }, 800)
   }
 
+  // Add event listener for buying collectibles
+  useEffect(() => {
+    const handleBuyCollectible = (event) => {
+      const collectibleData = event.detail
+      // Call our buyItem function with the collectible data
+      handleBuyItem(collectibleData)
+    }
+
+    window.addEventListener("buyCollectible", handleBuyCollectible)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("buyCollectible", handleBuyCollectible)
+    }
+  }, [coins]) // Add coins as a dependency since we need updated coin count
+
   // Enhanced buying function with animation
   const handleBuyItem = (item) => {
-    if (coins < item.price) {
-      showNotification(`Not enough coins! You need ${item.price - coins} more coins to buy this item.`, "error")
+    // If the item has no price or price is 0, it's free
+    const itemPrice = item.price || 0
+
+    if (itemPrice > 0 && coins < itemPrice) {
+      showNotification(`Not enough coins! You need ${itemPrice - coins} more coins to buy this item.`, "error")
       return
     }
 
-    // Show spending animation
-    setShowSpendingAnimation(true)
+    // Show spending animation for paid items
+    if (itemPrice > 0) {
+      setShowSpendingAnimation(true)
+    }
 
-    setTimeout(() => {
-      // Purchase the item
-      setCoins(coins - item.price)
+    setTimeout(
+      () => {
+        // Purchase the item
+        if (itemPrice > 0) {
+          setCoins(coins - itemPrice)
+        }
 
-      // Add to inventory
-      const existingItemIndex = items.findIndex(
-        (i) => i.name === item.name && i.effect === item.effect && i.value === item.value,
-      )
+        // Handle different item types
+        if (item.type === "color" || item.type === "accessory") {
+          applyCustomization(item.type, item.value)
+          showNotification(`Applied ${item.name} to your pet!`, "success")
+        } else if (item.type === "collectible") {
+          // Handle collectible purchase
+          const { collectibleData } = item
 
-      if (existingItemIndex >= 0) {
-        const updatedItems = [...items]
-        updatedItems[existingItemIndex].count += 1
-        setItems(updatedItems)
-      } else {
-        setItems([
-          ...items,
-          {
-            id: items.length + 1,
-            name: item.name,
-            icon: item.icon || getIconForEffect(item.effect),
-            count: 1,
-            effect: item.effect,
-            value: item.value,
-          },
-        ])
-      }
+          // Update the collectible to be owned
+          if (collectibleData) {
+            usePetStore.getState().addCollectible({
+              ...collectibleData,
+              owned: true,
+              obtainedDate: new Date().toISOString(),
+            })
 
-      showNotification(`Successfully purchased ${item.name} for ${item.price} coins!`, "success")
-      setShowSpendingAnimation(false)
-    }, 1000)
+            showNotification(`Acquired ${collectibleData.name}!`, "success")
+          }
+        } else {
+          // Add to inventory for regular items
+          const existingItemIndex = items.findIndex(
+            (i) => i.name === item.name && i.effect === item.effect && i.value === item.value,
+          )
+
+          if (existingItemIndex >= 0) {
+            const updatedItems = [...items]
+            updatedItems[existingItemIndex].count += 1
+            setItems(updatedItems)
+          } else {
+            setItems([
+              ...items,
+              {
+                id: items.length + 1,
+                name: item.name,
+                icon: item.icon || getIconForEffect(item.effect),
+                count: 1,
+                effect: item.effect,
+                value: item.value,
+              },
+            ])
+          }
+
+          showNotification(
+            `Successfully purchased ${item.name}${itemPrice > 0 ? ` for ${itemPrice} coins` : ""}!`,
+            "success",
+          )
+        }
+
+        setShowSpendingAnimation(false)
+      },
+      itemPrice > 0 ? 1000 : 300,
+    )
   }
 
   // Helper function to get icon based on effect
@@ -603,43 +708,45 @@ export default function CodePetGame() {
   }
 
   const gameContent = (
-    <div className="game-container relative">
+    <div
+      className={`game-container relative w-full h-full flex flex-col ${isFullscreen ? "fullscreen" : "container-mode"}`}
+    >
       {/* Game background - black and white theme */}
-      <div className="absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out bg-gradient-to-b from-background to-muted/30">
+      <div className="absolute inset-0 w-full h-full bg-black">
         {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden opacity-10">
-          {Array.from({ length: 15 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-foreground"
-              style={{
-                width: `${Math.random() * 30 + 5}px`,
-                height: `${Math.random() * 30 + 5}px`,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: Math.random() * 0.5 + 0.1,
-                animation: `float ${Math.random() * 10 + 5}s infinite ease-in-out`,
-              }}
-            ></div>
-          ))}
+        <div className="absolute inset-0 overflow-hidden opacity-5">
+          {Array.from({ length: 15 }).map((_, i) => {
+            // Use index-based values instead of random to ensure consistency between server and client
+            const width = 5 + (i % 6) * 5
+            const height = 5 + (i % 6) * 5
+            const left = (i * 7) % 100
+            const top = (i * 13) % 100
+            const opacity = 0.1 + (i % 10) * 0.05
+            const animationDuration = 5 + (i % 5) * 2
+
+            return (
+              <div
+                key={i}
+                className="absolute rounded-full bg-white"
+                style={{
+                  width: `${width}px`,
+                  height: `${height}px`,
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  opacity: opacity,
+                  animation: `float ${animationDuration}s infinite ease-in-out`,
+                }}
+              ></div>
+            )
+          })}
         </div>
       </div>
 
-      {/* Fullscreen toggle button */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-2 right-2 z-50 bg-black/60 text-white border-white/20 hover:bg-white/20"
-        onClick={toggleFullscreen}
-      >
-        {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-      </Button>
-
-      {/* Tablet layout with two columns */}
-      <div className="grid grid-cols-1 md:grid-cols-5">
+      {/* Main layout */}
+      <div className="flex flex-col md:flex-row w-full h-full">
         {/* Left column - Pet visualization and interactions */}
-        <div className="md:col-span-2 border-r border-border">
-          {/* Game header */}
+        <div className="w-full md:w-2/5 border-r border-white/10 flex flex-col h-full">
+          {/* Game header - fixed height and consistent spacing */}
           <GameHeader
             level={level}
             coins={coins}
@@ -648,105 +755,247 @@ export default function CodePetGame() {
             onSettingsClick={() => setShowSettings(!showSettings)}
           />
 
-          {/* The pet visualization with animations */}
-          <div
-            className="flex justify-center items-center py-8 px-4 relative"
-            onClick={() => setPetInteractionMenu(!petInteractionMenu)}
-          >
-            <PetVisual
-              mood={mood}
-              level={level}
-              petForm={petForm}
-              isAnimating={isAnimating}
-              bounceEffect={exp >= level * 15} // Bounce when close to level up
-              customizations={customizations}
-              maxSize={180} // Maximum size for the pet
-            />
+          {/* Left column content */}
+          <div className="flex-1 flex flex-col items-center justify-start px-4 relative overflow-y-auto custom-scrollbar">
+            {/* The pet visualization with animations */}
+            <div
+              className="flex justify-center items-center py-4 relative cursor-pointer"
+              onClick={() => setPetInteractionMenu(!petInteractionMenu)}
+            >
+              <PetVisual
+                mood={mood}
+                level={level}
+                petForm={petForm}
+                isAnimating={isAnimating}
+                bounceEffect={exp >= level * 15} // Bounce when close to level up
+                customizations={customizations}
+                maxSize={180} // Fixed size for the pet
+              />
 
-            {/* Pet interaction menu */}
-            <AnimatePresence>
-              {petInteractionMenu && (
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg z-10"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="grid grid-cols-2 gap-3 p-4">
-                    <motion.button
-                      className="flex flex-col items-center justify-center p-3 bg-primary/10 rounded-lg hover:bg-primary/20"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handlePet()
-                        setPetInteractionMenu(false)
-                      }}
-                    >
-                      <Heart className="h-8 w-8 mb-2 text-primary" />
-                      <span className="text-white">Pet</span>
-                    </motion.button>
+              {/* Pet interaction menu */}
+              <AnimatePresence>
+                {petInteractionMenu && (
+                  <motion.div
+                    className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-10"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <div className="grid grid-cols-2 gap-3 p-4">
+                      <motion.button
+                        className="flex flex-col items-center justify-center p-3 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePet()
+                          setPetInteractionMenu(false)
+                        }}
+                      >
+                        <Heart className="h-8 w-8 mb-2 text-white" />
+                        <span className="text-white">Pet</span>
+                      </motion.button>
 
-                    <motion.button
-                      className="flex flex-col items-center justify-center p-3 bg-primary/10 rounded-lg hover:bg-primary/20"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleFeed()
-                        setPetInteractionMenu(false)
-                      }}
-                    >
-                      <Utensils className="h-8 w-8 mb-2 text-primary" />
-                      <span className="text-white">Feed</span>
-                    </motion.button>
+                      <motion.button
+                        className="flex flex-col items-center justify-center p-3 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleFeed()
+                          setPetInteractionMenu(false)
+                        }}
+                      >
+                        <Utensils className="h-8 w-8 mb-2 text-white" />
+                        <span className="text-white">Feed</span>
+                      </motion.button>
 
-                    <motion.button
-                      className="flex flex-col items-center justify-center p-3 bg-primary/10 rounded-lg hover:bg-primary/20"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleTrick()
-                        setPetInteractionMenu(false)
-                      }}
-                    >
-                      <Sparkles className="h-8 w-8 mb-2 text-primary" />
-                      <span className="text-white">Trick</span>
-                    </motion.button>
+                      <motion.button
+                        className="flex flex-col items-center justify-center p-3 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleTrick()
+                          setPetInteractionMenu(false)
+                        }}
+                      >
+                        <Sparkles className="h-8 w-8 mb-2 text-white" />
+                        <span className="text-white">Trick</span>
+                      </motion.button>
 
-                    <motion.button
-                      className="flex flex-col items-center justify-center p-3 bg-primary/10 rounded-lg hover:bg-primary/20"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setPetInteractionMenu(false)
-                      }}
-                    >
-                      <X className="h-8 w-8 mb-2 text-primary" />
-                      <span className="text-white">Close</span>
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                      <motion.button
+                        className="flex flex-col items-center justify-center p-3 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setPetInteractionMenu(false)
+                        }}
+                      >
+                        <X className="h-8 w-8 mb-2 text-white" />
+                        <span className="text-white">Close</span>
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-          {/* Status bars */}
-          <div className="px-4 pb-4">
-            <StatusBars energy={energy} health={health} happiness={happiness} intelligence={intelligence} />
+            {/* Status bars - moved directly below the pet */}
+            <div className="w-full">
+              <StatusBars energy={energy} health={health} happiness={happiness} intelligence={intelligence} />
+            </div>
+
+            {/* Quick action buttons for all stats */}
+            <div className="w-full mb-4 grid grid-cols-3 gap-2">
+              <motion.button
+                onClick={() => handleCodeSession()}
+                className="flex items-center justify-center p-2 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Zap size={16} className="text-white mr-2" />
+                <span className="text-sm font-medium text-white">Code</span>
+              </motion.button>
+
+              <motion.button
+                onClick={() => {
+                  if (energy < 5) {
+                    showNotification(`${petName} is too tired to train. Try resting first!`)
+                    return
+                  }
+                  const intGain = 2 + Math.floor(Math.random() * 3)
+                  setIntelligence(Math.min(100, intelligence + intGain))
+                  setEnergy(Math.max(0, energy - 5))
+                  setHappiness(Math.max(0, happiness - 2))
+                  setHealth(Math.max(0, health - 1))
+                  showNotification(`Intelligence +${intGain}!`)
+                }}
+                className="flex items-center justify-center p-2 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Brain size={16} className="text-white mr-2" />
+                <span className="text-sm font-medium text-white">Train</span>
+              </motion.button>
+
+              <motion.button
+                onClick={() => {
+                  if (energy < 3) {
+                    showNotification(`${petName} is too tired. Try resting first!`)
+                    return
+                  }
+                  const happyGain = 5 + Math.floor(Math.random() * 10)
+                  setHappiness(Math.min(100, happiness + happyGain))
+                  setEnergy(Math.max(0, energy - 3))
+                  setHealth(Math.min(100, health + 1))
+                  showNotification(`Happiness +${happyGain}!`)
+                }}
+                className="flex items-center justify-center p-2 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Heart size={16} className="text-white mr-2" />
+                <span className="text-sm font-medium text-white">Pet</span>
+              </motion.button>
+
+              <motion.button
+                onClick={() => {
+                  if (coins < 5) {
+                    showNotification(`Not enough coins! You need 5 coins.`, "error")
+                    return
+                  }
+                  const healthGain = 5 + Math.floor(Math.random() * 8)
+                  setHealth(Math.min(100, health + healthGain))
+                  setCoins(Math.max(0, coins - 5))
+                  setEnergy(Math.min(100, energy + 3))
+                  setHappiness(Math.min(100, happiness + 2))
+                  setIntelligence(Math.max(0, intelligence - 1))
+                  showNotification(`Health +${healthGain}! (Cost: 5 coins)`)
+                }}
+                className="flex items-center justify-center p-2 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={coins < 5}
+              >
+                <Utensils size={16} className="text-white mr-2" />
+                <span className="text-sm font-medium text-white">Feed</span>
+              </motion.button>
+
+              <motion.button
+                onClick={() => {
+                  if (coins < 10) {
+                    showNotification(`Not enough coins! You need 10 coins.`, "error")
+                    return
+                  }
+                  const energyGain = 10 + Math.floor(Math.random() * 15)
+                  setEnergy(Math.min(100, energy + energyGain))
+                  setCoins(Math.max(0, coins - 10))
+                  setHealth(Math.max(0, health - 2))
+                  setIntelligence(Math.max(0, intelligence - 2))
+                  showNotification(`Energy +${energyGain}! (Cost: 10 coins)`)
+                }}
+                className="flex items-center justify-center p-2 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={coins < 10}
+              >
+                <Coffee size={16} className="text-white mr-2" />
+                <span className="text-sm font-medium text-white">Energize</span>
+              </motion.button>
+
+              <motion.button
+                onClick={() => {
+                  if (coins < 15) {
+                    showNotification(`Not enough coins! You need 15 coins.`, "error")
+                    return
+                  }
+                  // Random stat boost
+                  const stats = ["energy", "health", "happiness", "intelligence"]
+                  const stat = stats[Math.floor(Math.random() * stats.length)]
+                  const gain = 5 + Math.floor(Math.random() * 20)
+
+                  if (stat === "energy") {
+                    setEnergy(Math.min(100, energy + gain))
+                    setHealth(Math.max(0, health - 3))
+                  } else if (stat === "health") {
+                    setHealth(Math.min(100, health + gain))
+                    setIntelligence(Math.max(0, intelligence - 3))
+                  } else if (stat === "happiness") {
+                    setHappiness(Math.min(100, happiness + gain))
+                    setEnergy(Math.max(0, energy - 3))
+                  } else if (stat === "intelligence") {
+                    setIntelligence(Math.min(100, intelligence + gain))
+                    setHappiness(Math.max(0, happiness - 3))
+                  }
+
+                  setCoins(Math.max(0, coins - 15))
+                  showNotification(`Random boost: ${stat} +${gain}! (Cost: 15 coins)`)
+                }}
+                className="flex items-center justify-center p-2 bg-white/5 rounded-lg hover:bg-white/10 border border-white/10"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={coins < 15}
+              >
+                <Sparkles size={16} className="text-white mr-2" />
+                <span className="text-sm font-medium text-white">Boost</span>
+              </motion.button>
+            </div>
           </div>
 
           {/* Experience bar with animation */}
-          <div className="px-4 pb-4">
-            <div className="w-full bg-muted/50 rounded-full h-4 mb-2 overflow-hidden">
+          <div className="px-4 pb-2">
+            {/* Add this to ensure correct XP calculation in the leveling system */}
+
+            {/* Make sure the XP bar shows the correct progress percentage */}
+            <div className="w-full bg-white/5 rounded-full h-4 mb-2 overflow-hidden">
               {/* Calculate XP required with the same formula as in the level up logic */}
               {(() => {
                 const xpRequiredForNextLevel = level * 20 + Math.floor(level * level * 1.5)
                 return (
                   <div
-                    className="bg-primary h-4 rounded-full transition-all duration-500 relative"
+                    className="bg-white h-4 rounded-full transition-all duration-500 relative"
                     style={{ width: `${(exp / xpRequiredForNextLevel) * 100}%` }}
                   >
                     <div className="absolute inset-0 bg-white opacity-20 animate-pulse"></div>
@@ -754,7 +1003,7 @@ export default function CodePetGame() {
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div
                         key={i}
-                        className="absolute top-0 bottom-0 w-px bg-white/40"
+                        className="absolute top-0 bottom-0 w-px bg-black/40"
                         style={{
                           left: `${(((i + 1) * xpRequiredForNextLevel) / 5 / xpRequiredForNextLevel) * 100}%`,
                         }}
@@ -765,14 +1014,14 @@ export default function CodePetGame() {
               })()}
               <div className="flex justify-between text-xs mt-1">
                 <span className="text-white">
-                  EXP: {exp}/{level * 20 + Math.floor(level * level * 1.5)}
+                  EXP: {exp.toFixed(2)}/{(level * 20 + Math.floor(level * level * 1.5)).toFixed(2)}
                 </span>
                 <span className="text-white">Level {level}</span>
               </div>
             </div>
           </div>
 
-          {/* Action buttons with animations */}
+          {/* Action buttons with animations - restored below pet stats */}
           <ActionButtons
             handleCodeSession={handleCodeSession}
             handleBreak={handleBreak}
@@ -784,25 +1033,13 @@ export default function CodePetGame() {
         </div>
 
         {/* Right column - Game tabs and panels */}
-        <div className="md:col-span-3">
-          {/* Stats summary */}
-          <div className="flex justify-between px-4 py-2 bg-background/80 border-b">
-            <div className="flex items-center">
-              <Trophy size={16} className="mr-1 text-yellow-500" />
-              <span className="font-medium text-white">Streak: {streak}d</span>
-            </div>
-            <div className="flex items-center">
-              <Coins size={16} className="mr-1 text-amber-500" />
-              <span className="font-medium text-white">{coins} coins</span>
-            </div>
-          </div>
-
+        <div className="w-full md:w-3/5 flex flex-col h-full">
           {/* Tabs navigation */}
           <GameTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          {/* Panels */}
-          <div className="bg-card p-4 rounded-b-lg h-[calc(100vh-180px)] min-h-[400px] max-h-[600px] overflow-y-auto custom-scrollbar">
-            <AnimatePresence mode="wait">
+          {/* Panels - make each panel individually scrollable */}
+          <div className="flex-1 bg-black overflow-hidden">
+            <AnimatePresence mode="sync">
               {activeTab === "stats" && (
                 <motion.div
                   key="stats"
@@ -810,6 +1047,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <StatsPanel />
                 </motion.div>
@@ -822,6 +1060,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <InventoryPanel useItem={useItem} />
                 </motion.div>
@@ -834,6 +1073,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <AchievementsPanel />
                 </motion.div>
@@ -846,6 +1086,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <ShopPanel buyItem={handleBuyItem} />
                 </motion.div>
@@ -858,6 +1099,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <DailyTasksPanel />
                 </motion.div>
@@ -870,6 +1112,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <PetEvolutionPanel />
                 </motion.div>
@@ -882,6 +1125,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <TrophiesPanel />
                 </motion.div>
@@ -894,6 +1138,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <CollectiblesPanel />
                 </motion.div>
@@ -906,6 +1151,7 @@ export default function CodePetGame() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="panel-scroll-container custom-scrollbar"
                 >
                   <TradingPanel />
                 </motion.div>
@@ -922,12 +1168,12 @@ export default function CodePetGame() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`absolute top-16 left-0 right-0 mx-auto w-4/5 p-3 rounded-lg shadow-lg z-50 flex items-center justify-center ${
+            className={`absolute top-16 left-0 right-0 mx-auto w-4/5 max-w-md p-3 rounded-lg shadow-lg z-50 flex items-center justify-center ${
               notification.type === "error"
-                ? "bg-red-900/90 border border-red-500/50"
+                ? "bg-black border border-red-500"
                 : notification.type === "success"
-                  ? "bg-green-900/90 border border-green-500/50"
-                  : "bg-background/90 border border-primary/50"
+                  ? "bg-black border border-green-500"
+                  : "bg-black border border-white/20"
             }`}
           >
             {notification.type === "error" ? (
@@ -935,7 +1181,7 @@ export default function CodePetGame() {
             ) : notification.type === "success" ? (
               <Check size={16} className="text-green-400 mr-2" />
             ) : (
-              <Trophy size={16} className="text-primary mr-2" />
+              <Trophy size={16} className="text-white mr-2" />
             )}
             <span className="text-white">{notification.message}</span>
           </motion.div>
@@ -951,15 +1197,15 @@ export default function CodePetGame() {
             exit={{ scale: 1.5, opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
           >
-            <div className="bg-background/80 p-6 rounded-xl shadow-2xl flex flex-col items-center">
-              <Sparkles size={40} className="text-primary mb-2" />
+            <div className="bg-black p-6 rounded-xl shadow-2xl flex flex-col items-center border border-white/20">
+              <Sparkles size={40} className="text-white mb-2" />
               <h3 className="text-xl font-bold mb-1 text-white">
                 {rewardType === "level" ? "Level Up!" : "Daily Reward!"}
               </h3>
-              <div className="text-3xl font-bold text-primary mb-2">
+              <div className="text-3xl font-bold text-white mb-2">
                 {rewardType === "level" ? `Level ${rewardValue}` : `+${rewardValue} coins`}
               </div>
-              <div className="text-sm text-white">
+              <div className="text-sm text-white/70">
                 {rewardType === "level" ? "New abilities unlocked!" : "Keep up the streak!"}
               </div>
             </div>
@@ -974,13 +1220,13 @@ export default function CodePetGame() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-background/90 backdrop-blur-sm z-30 flex items-center justify-center"
+            className="absolute inset-0 bg-black/90 backdrop-blur-sm z-30 flex items-center justify-center"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-card p-6 rounded-lg shadow-xl w-full max-w-md"
+              className="bg-black p-6 rounded-lg shadow-xl w-full max-w-md border border-white/20"
             >
               <SettingsPanel onClose={() => setShowSettings(false)} />
             </motion.div>
@@ -1004,12 +1250,12 @@ export default function CodePetGame() {
               transition={{ duration: 0.5 }}
               className="relative"
             >
-              <Utensils size={60} className="text-primary" />
+              <Utensils size={60} className="text-white" />
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: [0, 1.5, 0] }}
                 transition={{ duration: 1, repeat: 2 }}
-                className="absolute inset-0 rounded-full border-2 border-primary"
+                className="absolute inset-0 rounded-full border-2 border-white"
               />
             </motion.div>
           </motion.div>
@@ -1037,7 +1283,7 @@ export default function CodePetGame() {
                   transition={{ duration: 1 }}
                   className="absolute"
                 >
-                  <Coins size={24} className="text-primary" />
+                  <Coins size={24} className="text-white" />
                 </motion.div>
               ))}
             </div>
@@ -1048,19 +1294,36 @@ export default function CodePetGame() {
   )
 
   return (
-    <div
-      className={`w-full ${
-        isFullscreen
-          ? "fixed inset-0 z-50 bg-black flex items-center justify-center p-0 m-0 h-screen w-screen"
-          : "max-w-5xl mx-auto"
-      } relative`}
-    >
+    <div className="w-full max-w-6xl mx-auto relative">
       {isFullscreen ? (
-        <div className="w-full h-full overflow-hidden">{gameContent}</div>
+        <>
+          <div className="fixed inset-0 z-50 bg-black flex items-center justify-center p-0 m-0 h-screen w-screen">
+            <div className="w-full h-full flex flex-col">{gameContent}</div>
+          </div>
+          {/* Floating fullscreen toggle button */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="fixed bottom-4 right-4 z-[60] bg-black/80 text-white border-white/20 hover:bg-white/20 rounded-full h-12 w-12 shadow-lg"
+            onClick={toggleFullscreen}
+          >
+            <Minimize2 size={20} />
+          </Button>
+        </>
       ) : (
-        <Card className="w-full overflow-hidden border-2 border-white/20 shadow-xl">
-          <CardContent className="p-0">{gameContent}</CardContent>
-        </Card>
+        <>
+          <Card className="w-full overflow-hidden border border-white/20 shadow-xl h-[700px]">
+            <CardContent className="p-0">{gameContent}</CardContent>
+          </Card>
+          <Button
+            variant="outline"
+            size="icon"
+            className="fixed bottom-4 right-4 z-50 bg-black/80 text-white border-white/20 hover:bg-white/20 rounded-full h-12 w-12 shadow-lg"
+            onClick={toggleFullscreen}
+          >
+            <Maximize2 size={20} />
+          </Button>
+        </>
       )}
     </div>
   )

@@ -330,7 +330,13 @@ export const usePetStore = create<PetState>()(
       addCollectible: (collectible) =>
         set((state) => ({
           collectibles: state.collectibles.map((c) =>
-            c.id === collectible.id ? { ...c, owned: true, obtainedDate: new Date().toISOString() } : c,
+            c.id === collectible.id
+              ? {
+                  ...c,
+                  owned: true,
+                  obtainedDate: collectible.obtainedDate || new Date().toISOString(),
+                }
+              : c,
           ),
         })),
 

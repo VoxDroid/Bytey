@@ -27,14 +27,21 @@ export default function PetVisual({
   bounceEffect,
   customizations,
   animationType,
-  maxSize = 200,
+  maxSize = 180, // Fixed size for the pet
 }: PetVisualProps) {
   // Pet appearance changes based on level, mood, and form
   const getPetSize = () => {
-    // Calculate base size with level scaling
-    const baseSize = 120 + level * 5
+    // Calculate base size with level scaling but keep it within limits
+    const baseSize = 140 + Math.min(level * 3, 20) // More controlled scaling
+
+    // Check if we're in a larger viewport
+    const isLargeScreen = typeof window !== "undefined" && window.innerHeight > 800
+
+    // Adjust maximum size based on screen size
+    const dynamicMaxSize = isLargeScreen ? maxSize * 1.2 : maxSize
+
     // Apply maximum size limit
-    const limitedSize = Math.min(baseSize, maxSize)
+    const limitedSize = Math.min(baseSize, dynamicMaxSize)
 
     return {
       width: limitedSize,
@@ -44,7 +51,7 @@ export default function PetVisual({
 
   const getPetColor = () => {
     // Use custom color if set, otherwise use mood-based colors
-    if (customizations.color && customizations.color !== "default") {
+    if (customizations?.color && customizations.color !== "default") {
       return customizations.color
     }
 
@@ -91,7 +98,7 @@ export default function PetVisual({
                 }}
               ></div>
             </div>
-            <Code size={48} className="text-background" />
+            <Code size={48} className="text-black" />
           </div>
         )
       case "robot":
@@ -126,7 +133,7 @@ export default function PetVisual({
                 }}
               ></div>
             </div>
-            <Code size={48} className="text-background" />
+            <Code size={48} className="text-black" />
           </div>
         )
       case "dragon":
@@ -163,7 +170,7 @@ export default function PetVisual({
                 }}
               ></div>
             </div>
-            <Zap size={48} className="text-background" />
+            <Zap size={48} className="text-black" />
           </div>
         )
       case "wizard":
@@ -190,7 +197,7 @@ export default function PetVisual({
                 transform: "rotate(45deg)",
               }}
             ></div>
-            <Wand size={48} className="text-background" />
+            <Wand size={48} className="text-black" />
           </div>
         )
       case "alien":
@@ -220,17 +227,17 @@ export default function PetVisual({
                 }}
               ></div>
             </div>
-            <Orbit size={48} className="text-background" />
+            <Orbit size={48} className="text-black" />
           </div>
         )
       default: // blob
-        return <Code size={48} className="text-background" />
+        return <Code size={48} className="text-black" />
     }
   }
 
   // Render pet accessory if any
   const renderAccessory = () => {
-    if (!customizations.accessory || customizations.accessory === "none") return null
+    if (!customizations?.accessory || customizations.accessory === "none") return null
 
     switch (customizations.accessory) {
       case "hat":
@@ -249,14 +256,14 @@ export default function PetVisual({
       case "glasses":
         return (
           <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 flex">
-            <div className="w-10 h-5 border-2 border-background rounded-full mr-1"></div>
-            <div className="w-10 h-5 border-2 border-background rounded-full"></div>
+            <div className="w-10 h-5 border-2 border-black rounded-full mr-1"></div>
+            <div className="w-10 h-5 border-2 border-black rounded-full"></div>
           </div>
         )
       case "bowtie":
         return (
           <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2">
-            <div className="w-12 h-6 bg-background rounded-md"></div>
+            <div className="w-12 h-6 bg-black rounded-md"></div>
           </div>
         )
       default:
@@ -296,28 +303,30 @@ export default function PetVisual({
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
     >
-      {renderPetForm()}
-      {renderAccessory()}
+      <div className="relative z-10">
+        {renderPetForm()}
+        {renderAccessory()}
 
-      {/* Expression that changes with mood */}
-      <div className="absolute bottom-4 flex">
-        {mood === "happy" && <span className="text-2xl text-white">^ᴗ^</span>}
-        {mood === "neutral" && <span className="text-2xl text-white">⊙ᴗ⊙</span>}
-        {mood === "tired" && <span className="text-2xl text-white">-ᴗ-</span>}
-        {mood === "excited" && <span className="text-2xl text-white">★ᴗ★</span>}
-        {mood === "curious" && <span className="text-2xl text-white">⊙ᴗ⊙?</span>}
-        {mood === "playful" && <span className="text-2xl text-white">^ᴗ~</span>}
-        {mood === "sleepy" && <span className="text-2xl text-white">⊙ᴗ⊙zzz</span>}
+        {/* Expression that changes with mood */}
+        <div className="absolute bottom-4 flex">
+          {mood === "happy" && <span className="text-2xl text-white">^ᴗ^</span>}
+          {mood === "neutral" && <span className="text-2xl text-white">⊙ᴗ⊙</span>}
+          {mood === "tired" && <span className="text-2xl text-white">-ᴗ-</span>}
+          {mood === "excited" && <span className="text-2xl text-white">★ᴗ★</span>}
+          {mood === "curious" && <span className="text-2xl text-white">⊙ᴗ⊙?</span>}
+          {mood === "playful" && <span className="text-2xl text-white">^ᴗ~</span>}
+          {mood === "sleepy" && <span className="text-2xl text-white">⊙ᴗ⊙zzz</span>}
+        </div>
       </div>
 
       {/* Level indicator */}
-      <div className="absolute -top-2 -right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center shadow-md">
+      <div className="absolute -top-2 -right-2 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center shadow-md z-20">
         {level}
       </div>
 
       {/* Mood indicator */}
       <motion.div
-        className="absolute -top-2 -left-2 rounded-full w-8 h-8 flex items-center justify-center shadow-md bg-white text-black"
+        className="absolute -top-2 -left-2 rounded-full w-8 h-8 flex items-center justify-center shadow-md bg-white text-black z-20"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 15 }}
