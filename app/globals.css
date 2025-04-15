@@ -184,6 +184,21 @@
   max-height: calc(100vh - 144px);
   overflow-y: auto;
   padding: 1rem;
+  position: relative; /* Add position relative */
+  z-index: 1; /* Ensure proper stacking */
+}
+
+/* Fix panel height to ensure content remains visible after animation */
+.fullscreen .panel-scroll-container > div {
+  min-height: 100%;
+  height: auto !important; /* Force height to auto */
+  opacity: 1 !important; /* Ensure content stays visible */
+}
+
+/* Ensure AnimatePresence children remain visible */
+.fullscreen .panel-scroll-container motion-div {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Game container */
@@ -267,7 +282,7 @@ body.fullscreen-active {
   padding-bottom: 0;
 }
 
-/* Fix full screen mode to ensure it extends to the full viewport */
+/* Fix fullscreen mode to ensure it extends to the full viewport */
 .fixed.inset-0 {
   height: 100vh;
   width: 100vw;
@@ -316,6 +331,7 @@ body.fullscreen-active {
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
+  position: relative; /* Ensure proper positioning context */
 }
 
 .collectible-card-content {
@@ -329,6 +345,7 @@ body.fullscreen-active {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative; /* For absolute positioning of stars */
 }
 
 .collectible-card-details {
@@ -349,4 +366,225 @@ body.fullscreen-active {
 
 .floating-button:hover {
   transform: scale(1.1);
+}
+
+/* Fix for rarity stars */
+.collectible-card .rarity-stars {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  z-index: 10;
+}
+
+.collectible-card .rarity-stars svg {
+  margin-left: 2px;
+}
+
+/* Add these styles at the end of the file */
+
+/* Rainbow star animation for mythic items - updated to be smoother and more elegant */
+@keyframes smooth-rainbow {
+  0% {
+    color: #8a2be2; /* Deep purple */
+  }
+  20% {
+    color: #9370db; /* Medium purple */
+  }
+  40% {
+    color: #da70d6; /* Orchid */
+  }
+  60% {
+    color: #ff69b4; /* Hot pink */
+  }
+  80% {
+    color: #c71585; /* Medium violet red */
+  }
+  100% {
+    color: #8a2be2; /* Back to deep purple */
+  }
+}
+
+.rainbow-star {
+  animation: smooth-rainbow 8s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(138, 43, 226, 0.4));
+}
+
+/* Only apply pulse to mythic stars - make it gentler */
+@keyframes gentle-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.collectible-card .rainbow-star {
+  animation: smooth-rainbow 8s ease-in-out infinite, gentle-pulse 4s ease-in-out infinite;
+}
+
+/* Update inventory item rainbow stars to match */
+.inventory-item .rainbow-star {
+  animation: smooth-rainbow 8s ease-in-out infinite, gentle-pulse 4s ease-in-out infinite;
+}
+
+/* Make the stars slightly larger based on rarity */
+.collectible-card .text-green-500 {
+  width: 14px;
+  height: 14px;
+}
+.collectible-card .text-blue-500 {
+  width: 15px;
+  height: 15px;
+}
+.collectible-card .text-yellow-500 {
+  width: 16px;
+  height: 16px;
+}
+.collectible-card .text-red-500 {
+  width: 17px;
+  height: 17px;
+}
+.collectible-card .text-purple-500 {
+  width: 18px;
+  height: 18px;
+}
+.collectible-card .rainbow-star {
+  width: 19px;
+  height: 19px;
+}
+
+/* Inventory panel styles */
+.inventory-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inventory-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+}
+
+/* Inventory item card styles */
+.inventory-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.inventory-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure consistent badge sizing */
+.inventory-item .badge {
+  font-size: 0.75rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+/* Fix for rarity stars in inventory */
+.inventory-item .rarity-stars {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  z-index: 10;
+}
+
+.inventory-item .rarity-stars svg {
+  margin-left: 2px;
+  width: 14px;
+  height: 14px;
+}
+
+/* Ensure text doesn't overflow */
+.inventory-item h4 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Ensure badges wrap properly */
+.inventory-item .flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Modal styles */
+.item-modal {
+  background-color: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(5px);
+}
+
+.item-modal-content {
+  background-color: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+}
+
+/* Item detail view */
+.item-detail-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.item-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.item-detail-stat {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+/* Customization option styles */
+.customization-option {
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.customization-option.selected {
+  border-color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Inventory tabs */
+.inventory-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.inventory-tab {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.inventory-tab.active {
+  border-bottom-color: white;
+  color: white;
+}
+
+.inventory-tab:not(.active) {
+  color: rgba(255, 255, 255, 0.5);
 }

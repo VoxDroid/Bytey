@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { usePetStore } from "@/lib/pet-store"
 import { useToast } from "@/hooks/use-toast"
 import PetVisual from "./pet-visual"
@@ -38,7 +38,7 @@ import TradingPanel from "./panels/trading-panel"
 
 export default function CodePetGame() {
   // UI states
-  const [activeTab, setActiveTab] = useState("stats")
+  const [activeTab, setActiveTab] = useState("inventory") // Set inventory as default tab
   const [showSettings, setShowSettings] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [notification, setNotification] = useState(null)
@@ -49,6 +49,8 @@ export default function CodePetGame() {
   const [showFeedingAnimation, setShowFeedingAnimation] = useState(false)
   const [showSpendingAnimation, setShowSpendingAnimation] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [viewItemModal, setViewItemModal] = useState(false)
+  const [viewingItem, setViewingItem] = useState(null)
 
   const { toast } = useToast()
 
@@ -93,7 +95,269 @@ export default function CodePetGame() {
     applyCustomization,
     trophies,
     unlockTrophy,
+    collectibles,
   } = usePetStore()
+
+  // Notification system
+  const showNotification = useCallback(
+    (message, type = "info") => {
+      setNotification({ message, type })
+      toast({
+        title: type === "error" ? "Error" : "CodePet",
+        description: message,
+        duration: 3000,
+        variant: type === "error" ? "destructive" : type === "success" ? "default" : "default",
+      })
+      setTimeout(() => setNotification(null), 3000)
+    },
+    [toast],
+  )
+
+  // Enhanced buying function with animation
+  const handleBuyItem = useCallback(
+    (item) => {
+      // If the item has no price or price is 0, it's free
+      const itemPrice = item.price || 0
+
+      if (itemPrice > 0 && coins < itemPrice) {
+        showNotification(`Not enough coins! You need ${itemPrice - coins} more coins to buy this item.`, "error")
+        return
+      }
+
+      // Show spending animation for paid items
+      if (itemPrice > 0) {
+        setShowSpendingAnimation(true)
+      }
+
+      setTimeout(
+        () => {
+          // Purchase the item
+          if (itemPrice > 0) {
+            setCoins(coins - itemPrice)
+          }
+
+          // Handle different item types
+          if (item.type === "color" || item.type === "accessory") {
+            applyCustomization(item.type, item.value)
+            showNotification(`Applied ${item.name} to your pet!`, "success")
+          } else if (item.type === "collectible") {
+            // Handle collectible purchase
+            const { collectibleData } = item
+
+            // Update the collectible to be owned
+            if (collectibleData) {
+              usePetStore.getState().addCollectible({
+                ...collectibleData,
+                owned: true,
+                obtainedDate: new Date().toISOString(),
+              })
+
+              showNotification(`Acquired ${collectibleData.name}!`, "success")
+            }
+          } else {
+            // Add to inventory for regular items
+            const existingItemIndex = items.findIndex(
+              (i) => i.name === item.name && i.effect === item.effect && i.value === item.value,
+            )
+
+            if (existingItemIndex >= 0) {
+              const updatedItems = [...items]
+              updatedItems[existingItemIndex].count += 1
+              setItems(updatedItems)
+            } else {
+              setItems([
+                ...items,
+                {
+                  id: items.length + 1,
+                  name: item.name,
+                  icon: item.icon || getIconForEffect(item.effect),
+                  count: 1,
+                  effect: item.effect,
+                  value: item.value,
+                },
+              ])
+            }
+
+            showNotification(
+              `Successfully purchased ${item.name}${itemPrice > 0 ? ` for ${itemPrice} coins` : ""}!`,
+              "success",
+            )
+          }
+
+          setShowSpendingAnimation(false)
+        },
+        itemPrice > 0 ? 1000 : 300,
+      )
+    },
+    [applyCustomization, coins, items, setItems, showNotification],
+  )
+
+  // Add event listener for buying collectibles
+  useEffect(() => {
+    const handleBuyCollectible = (event) => {
+      const collectibleData = event.detail
+      // Call our buyItem function with the collectible data
+      handleBuyItem(collectibleData)
+    }
+
+    window.addEventListener("buyCollectible", handleBuyCollectible)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("buyCollectible", handleBuyCollectible)
+    }
+  }, [coins, handleBuyItem]) // Add coins as a dependency since we need updated coin count
+
+  // Enhanced useItem function with animation
+  const useItemInner = useCallback(
+    (itemId) => {
+      const item = items.find((i) => i.id === itemId)
+
+      if (item && item.count > 0) {
+        setIsAnimating(true)
+        setShowFeedingAnimation(true)
+
+        setTimeout(() => {
+          // Apply item effect
+          if (item.effect === "energy") {
+            setEnergy(Math.min(100, energy + item.value))
+            showNotification(`Energy increased by ${item.value}!`)
+          } else if (item.effect === "health") {
+            setHealth(Math.min(100, health + item.value))
+            showNotification(`Health increased by ${item.value}!`)
+          } else if (item.effect === "happiness") {
+            setHappiness(Math.min(100, happiness + item.value))
+            showNotification(`Happiness increased by ${item.value}!`)
+          } else if (item.effect === "intelligence") {
+            setIntelligence(Math.min(100, intelligence + item.value))
+            showNotification(`Intelligence increased by ${item.value}!`)
+          } else if (item.effect === "exp") {
+            const newExp = exp + item.value
+            setExp(newExp)
+            showNotification(`Experience increased by ${item.value}!`)
+
+            // Check for level up
+            if (newExp >= level * 20) {
+              setLevel(level + 1)
+              setExp(0)
+              showNotification(`${petName} leveled up to level ${level + 1}!`)
+            }
+          } else if (item.effect === "random") {
+            // Random positive effect
+            const effects = ["energy", "health", "happiness", "intelligence", "exp", "coins"]
+            const randomEffect = effects[Math.floor(Math.random() * effects.length)]
+            const randomValue = Math.floor(Math.random() * 20) + 10
+
+            if (randomEffect === "energy") {
+              setEnergy(Math.min(100, energy + randomValue))
+            } else if (randomEffect === "health") {
+              setHealth(Math.min(100, health + randomValue))
+            } else if (randomEffect === "happiness") {
+              setHappiness(Math.min(100, happiness + randomValue))
+            } else if (randomEffect === "intelligence") {
+              setIntelligence(Math.min(100, intelligence + randomValue))
+            } else if (randomEffect === "exp") {
+              setExp(exp + randomValue)
+            } else if (randomEffect === "coins") {
+              setCoins(coins + randomValue)
+            }
+
+            showNotification(`Mystery box gave you ${randomValue} ${randomEffect}!`)
+          }
+
+          // Update inventory
+          const updatedItems = items
+            .map((i) => {
+              if (i.id === itemId) {
+                return { ...i, count: i.count - 1 }
+              }
+              return i
+            })
+            .filter((i) => i.count > 0) // Remove items with zero count
+
+          setItems(updatedItems)
+
+          // Complete daily task if applicable
+          if (!dailyTasksCompleted.includes("item")) {
+            completeDailyTask("item")
+            const taskBonus = 10
+            setCoins(coins + taskBonus)
+            showNotification(`Daily task completed! +${taskBonus} bonus coins!`)
+          }
+
+          setIsAnimating(false)
+          setShowFeedingAnimation(false)
+        }, 1500)
+      }
+    },
+    [
+      items,
+      setItems,
+      energy,
+      setEnergy,
+      health,
+      setHealth,
+      happiness,
+      setHappiness,
+      intelligence,
+      setIntelligence,
+      exp,
+      setExp,
+      level,
+      setLevel,
+      petName,
+      coins,
+      setCoins,
+      dailyTasksCompleted,
+      completeDailyTask,
+      showNotification,
+    ],
+  )
+
+  // Create a ref to hold the latest version of useItemInner
+  const useItemInnerRef = useRef(useItemInner)
+
+  // Update the ref whenever useItemInner changes
+  useEffect(() => {
+    useItemInnerRef.current = useItemInner
+  }, [useItemInner])
+
+  // Define a stable useItem function that uses the ref
+  const useItem = useCallback((itemId) => {
+    useItemInnerRef.current(itemId)
+  }, [])
+
+  // Listen for useItem events
+  useEffect(() => {
+    const handleUseItem = (event) => {
+      const itemId = event.detail.id
+      useItem(itemId)
+    }
+
+    const handleSellItem = (event) => {
+      const { id, type } = event.detail
+
+      if (type === "consumable") {
+        // Remove the item from inventory
+        const updatedItems = items.filter((item) => item.id !== id)
+        setItems(updatedItems)
+      } else if (type === "collectible") {
+        // Mark collectible as not owned
+        const updatedCollectibles = collectibles.map((collectible) =>
+          collectible.id === id ? { ...collectible, owned: false } : collectible,
+        )
+        usePetStore.setState({ collectibles: updatedCollectibles })
+      }
+    }
+
+    window.addEventListener("useItem", handleUseItem)
+    window.addEventListener("sellItem", handleSellItem)
+
+    return () => {
+      window.removeEventListener("useItem", handleUseItem)
+      window.removeEventListener("sellItem", handleSellItem)
+    }
+  }, [items, setItems, collectibles, useItem])
 
   // Check for daily login and reset tasks if needed
   useEffect(() => {
@@ -116,7 +380,7 @@ export default function CodePetGame() {
       setShowReward(true)
       setTimeout(() => setShowReward(false), 3000)
     }
-  }, [lastLogin, setLastLogin, resetDailyTasks, streak, setCoins, coins])
+  }, [lastLogin, setLastLogin, resetDailyTasks, streak, setCoins, coins, showNotification])
 
   // Time-based effects
   useEffect(() => {
@@ -218,25 +482,15 @@ export default function CodePetGame() {
     }
   }, [level, streak, unlockAchievement, updateSkills])
 
-  // Notification system
-  const showNotification = (message, type = "info") => {
-    setNotification({ message, type })
-    toast({
-      title: type === "error" ? "Error" : "CodePet",
-      description: message,
-      duration: 3000,
-      variant: type === "error" ? "destructive" : type === "success" ? "default" : "default",
-    })
-    setTimeout(() => setNotification(null), 3000)
-  }
-
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
     if (!isFullscreen) {
       document.documentElement.style.overflow = "hidden"
+      document.body.classList.add("fullscreen-active")
     } else {
       document.documentElement.style.overflow = ""
+      document.body.classList.remove("fullscreen-active")
     }
   }
 
@@ -448,7 +702,6 @@ export default function CodePetGame() {
       setEnergy(Math.max(0, energy - 25))
       setIntelligence(Math.min(100, intelligence + 15))
       setHappiness(Math.max(0, happiness - 10)) // Training is hard work
-      setHealth(Math.max(0, health - 5)) // Training is  happiness - 10)) // Training is hard work
       setHealth(Math.max(0, health - 5)) // Training is tiring
 
       showNotification(`${petName} learned new skills through training!`)
@@ -513,98 +766,6 @@ export default function CodePetGame() {
     }, 800)
   }
 
-  // Add event listener for buying collectibles
-  useEffect(() => {
-    const handleBuyCollectible = (event) => {
-      const collectibleData = event.detail
-      // Call our buyItem function with the collectible data
-      handleBuyItem(collectibleData)
-    }
-
-    window.addEventListener("buyCollectible", handleBuyCollectible)
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("buyCollectible", handleBuyCollectible)
-    }
-  }, [coins]) // Add coins as a dependency since we need updated coin count
-
-  // Enhanced buying function with animation
-  const handleBuyItem = (item) => {
-    // If the item has no price or price is 0, it's free
-    const itemPrice = item.price || 0
-
-    if (itemPrice > 0 && coins < itemPrice) {
-      showNotification(`Not enough coins! You need ${itemPrice - coins} more coins to buy this item.`, "error")
-      return
-    }
-
-    // Show spending animation for paid items
-    if (itemPrice > 0) {
-      setShowSpendingAnimation(true)
-    }
-
-    setTimeout(
-      () => {
-        // Purchase the item
-        if (itemPrice > 0) {
-          setCoins(coins - itemPrice)
-        }
-
-        // Handle different item types
-        if (item.type === "color" || item.type === "accessory") {
-          applyCustomization(item.type, item.value)
-          showNotification(`Applied ${item.name} to your pet!`, "success")
-        } else if (item.type === "collectible") {
-          // Handle collectible purchase
-          const { collectibleData } = item
-
-          // Update the collectible to be owned
-          if (collectibleData) {
-            usePetStore.getState().addCollectible({
-              ...collectibleData,
-              owned: true,
-              obtainedDate: new Date().toISOString(),
-            })
-
-            showNotification(`Acquired ${collectibleData.name}!`, "success")
-          }
-        } else {
-          // Add to inventory for regular items
-          const existingItemIndex = items.findIndex(
-            (i) => i.name === item.name && i.effect === item.effect && i.value === item.value,
-          )
-
-          if (existingItemIndex >= 0) {
-            const updatedItems = [...items]
-            updatedItems[existingItemIndex].count += 1
-            setItems(updatedItems)
-          } else {
-            setItems([
-              ...items,
-              {
-                id: items.length + 1,
-                name: item.name,
-                icon: item.icon || getIconForEffect(item.effect),
-                count: 1,
-                effect: item.effect,
-                value: item.value,
-              },
-            ])
-          }
-
-          showNotification(
-            `Successfully purchased ${item.name}${itemPrice > 0 ? ` for ${itemPrice} coins` : ""}!`,
-            "success",
-          )
-        }
-
-        setShowSpendingAnimation(false)
-      },
-      itemPrice > 0 ? 1000 : 300,
-    )
-  }
-
   // Helper function to get icon based on effect
   const getIconForEffect = (effect) => {
     switch (effect) {
@@ -622,88 +783,6 @@ export default function CodePetGame() {
         return "🎲"
       default:
         return "📦"
-    }
-  }
-
-  // Enhanced useItem function with animation
-  const useItem = (itemId) => {
-    const item = items.find((i) => i.id === itemId)
-
-    if (item && item.count > 0) {
-      setIsAnimating(true)
-      setShowFeedingAnimation(true)
-
-      setTimeout(() => {
-        // Apply item effect
-        if (item.effect === "energy") {
-          setEnergy(Math.min(100, energy + item.value))
-          showNotification(`Energy increased by ${item.value}!`)
-        } else if (item.effect === "health") {
-          setHealth(Math.min(100, health + item.value))
-          showNotification(`Health increased by ${item.value}!`)
-        } else if (item.effect === "happiness") {
-          setHappiness(Math.min(100, happiness + item.value))
-          showNotification(`Happiness increased by ${item.value}!`)
-        } else if (item.effect === "intelligence") {
-          setIntelligence(Math.min(100, intelligence + item.value))
-          showNotification(`Intelligence increased by ${item.value}!`)
-        } else if (item.effect === "exp") {
-          const newExp = exp + item.value
-          setExp(newExp)
-          showNotification(`Experience increased by ${item.value}!`)
-
-          // Check for level up
-          if (newExp >= level * 20) {
-            setLevel(level + 1)
-            setExp(0)
-            showNotification(`${petName} leveled up to level ${level + 1}!`)
-          }
-        } else if (item.effect === "random") {
-          // Random positive effect
-          const effects = ["energy", "health", "happiness", "intelligence", "exp", "coins"]
-          const randomEffect = effects[Math.floor(Math.random() * effects.length)]
-          const randomValue = Math.floor(Math.random() * 20) + 10
-
-          if (randomEffect === "energy") {
-            setEnergy(Math.min(100, energy + randomValue))
-          } else if (randomEffect === "health") {
-            setHealth(Math.min(100, health + randomValue))
-          } else if (randomEffect === "happiness") {
-            setHappiness(Math.min(100, happiness + randomValue))
-          } else if (randomEffect === "intelligence") {
-            setIntelligence(Math.min(100, intelligence + randomValue))
-          } else if (randomEffect === "exp") {
-            setExp(exp + randomValue)
-          } else if (randomEffect === "coins") {
-            setCoins(coins + randomValue)
-          }
-
-          showNotification(`Mystery box gave you ${randomValue} ${randomEffect}!`)
-        }
-
-        // Update inventory
-        const updatedItems = items
-          .map((i) => {
-            if (i.id === itemId) {
-              return { ...i, count: i.count - 1 }
-            }
-            return i
-          })
-          .filter((i) => i.count > 0) // Remove items with zero count
-
-        setItems(updatedItems)
-
-        // Complete daily task if applicable
-        if (!dailyTasksCompleted.includes("item")) {
-          completeDailyTask("item")
-          const taskBonus = 10
-          setCoins(coins + taskBonus)
-          showNotification(`Daily task completed! +${taskBonus} bonus coins!`)
-        }
-
-        setIsAnimating(false)
-        setShowFeedingAnimation(false)
-      }, 1500)
     }
   }
 
@@ -883,7 +962,7 @@ export default function CodePetGame() {
               <motion.button
                 onClick={() => {
                   if (energy < 3) {
-                    showNotification(`${petName} is too tired. Try resting first!`)
+                    showNotification(`${petName} is too tired to train. Try resting first!`)
                     return
                   }
                   const happyGain = 5 + Math.floor(Math.random() * 10)
@@ -1039,7 +1118,7 @@ export default function CodePetGame() {
 
           {/* Panels - make each panel individually scrollable */}
           <div className="flex-1 bg-black overflow-hidden">
-            <AnimatePresence mode="sync">
+            <AnimatePresence mode="wait">
               {activeTab === "stats" && (
                 <motion.div
                   key="stats"
@@ -1062,7 +1141,7 @@ export default function CodePetGame() {
                   transition={{ duration: 0.2 }}
                   className="panel-scroll-container custom-scrollbar"
                 >
-                  <InventoryPanel useItem={useItem} />
+                  <InventoryPanel />
                 </motion.div>
               )}
 
@@ -1199,6 +1278,7 @@ export default function CodePetGame() {
           >
             <div className="bg-black p-6 rounded-xl shadow-2xl flex flex-col items-center border border-white/20">
               <Sparkles size={40} className="text-white mb-2" />
+
               <h3 className="text-xl font-bold mb-1 text-white">
                 {rewardType === "level" ? "Level Up!" : "Daily Reward!"}
               </h3>
@@ -1298,7 +1378,7 @@ export default function CodePetGame() {
       {isFullscreen ? (
         <>
           <div className="fixed inset-0 z-50 bg-black flex items-center justify-center p-0 m-0 h-screen w-screen">
-            <div className="w-full h-full flex flex-col">{gameContent}</div>
+            <div className="w-full h-full flex flex-col overflow-hidden">{gameContent}</div>
           </div>
           {/* Floating fullscreen toggle button */}
           <Button

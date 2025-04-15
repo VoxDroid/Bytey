@@ -1,7 +1,7 @@
 "use client"
 
 import { usePetStore } from "@/lib/pet-store"
-import { Gem, Filter, Search, Plus, Star, ArrowUpDown, Coins } from "lucide-react"
+import { Gem, Filter, Search, Plus, ArrowUpDown, Coins, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
@@ -161,6 +161,64 @@ export default function CollectiblesPanel() {
     show: { opacity: 1, y: 0 },
   }
 
+  // Function to render rarity stars
+  const renderRarityStars = (rarity) => {
+    const starCount =
+      rarity === "common"
+        ? 1
+        : rarity === "uncommon"
+          ? 2
+          : rarity === "rare"
+            ? 3
+            : rarity === "epic"
+              ? 4
+              : rarity === "legendary"
+                ? 5
+                : 6 // mythic
+
+    // Get star color based on rarity
+    const getStarColor = () => {
+      switch (rarity) {
+        case "common":
+          return "text-green-500"
+        case "uncommon":
+          return "text-blue-500"
+        case "rare":
+          return "text-yellow-500"
+        case "epic":
+          return "text-red-500"
+        case "legendary":
+          return "text-purple-500"
+        case "mythic":
+          return "rainbow-star" // Special class for rainbow animation
+        default:
+          return "text-gray-500"
+      }
+    }
+
+    return (
+      <div className="flex">
+        {Array.from({ length: starCount }).map((_, i) => (
+          <svg
+            key={i}
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`h-4 w-4 ${rarity === "mythic" ? "rainbow-star" : getStarColor()}`}
+          >
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
@@ -229,33 +287,30 @@ export default function CollectiblesPanel() {
             variants={item}
             className="collectible-card border border-white/10 rounded-lg overflow-hidden bg-black"
             whileHover={{ scale: 1.03, y: -5 }}
+            onClick={() => {
+              if (collectible.owned) {
+                // Trigger view item modal
+                window.dispatchEvent(
+                  new CustomEvent("viewItem", {
+                    detail: {
+                      type: "collectible",
+                      item: collectible,
+                    },
+                  }),
+                )
+              }
+            }}
           >
-            {/* Rarity stars at the top */}
-            <div className="absolute top-2 right-2 flex">
-              {Array.from({
-                length:
-                  collectible.rarity === "common"
-                    ? 1
-                    : collectible.rarity === "uncommon"
-                      ? 2
-                      : collectible.rarity === "rare"
-                        ? 3
-                        : collectible.rarity === "epic"
-                          ? 4
-                          : collectible.rarity === "legendary"
-                            ? 5
-                            : 6,
-              }).map((_, i) => (
-                <Star key={i} className="h-4 w-4 text-white" />
-              ))}
-            </div>
-
+            {/* Card content with fixed height structure */}
             <div className="collectible-card-content">
               {/* Icon centered at the top */}
-              <div className="collectible-card-image p-4">
+              <div className="collectible-card-image p-4 relative">
                 <div className="w-20 h-20 rounded-full flex items-center justify-center bg-white/5 mx-auto">
                   {getCollectibleIcon(collectible.image)}
                 </div>
+
+                {/* Rarity stars positioned absolutely */}
+                <div className="absolute top-2 right-2">{renderRarityStars(collectible.rarity)}</div>
               </div>
 
               {/* Content section */}
@@ -285,12 +340,16 @@ export default function CollectiblesPanel() {
               ) : (
                 <Button
                   size="sm"
-                  className={`${coins >= collectible.value ? "bg-white/10 hover:bg-white/20" : "bg-white/5 cursor-not-allowed"} text-white border border-white/10`}
-                  onClick={() => handleBuyCollectible(collectible)}
+                  className={`${
+                    coins >= collectible.value ? "bg-white/10 hover:bg-white/20" : "bg-white/5 cursor-not-allowed"
+                  } text-white border border-white/10 w-9 h-9 p-0`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleBuyCollectible(collectible)
+                  }}
                   disabled={coins < collectible.value}
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  {coins >= collectible.value ? "Acquire" : "Not enough"}
+                  {coins >= collectible.value ? <Plus className="h-4 w-4" /> : <X className="h-4 w-4" />}
                 </Button>
               )}
             </div>
