@@ -19,6 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/assets/icon/Bytey.ico" sizes="any" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/50 p-6">
@@ -29,6 +32,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
-import './globals.css'
