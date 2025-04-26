@@ -306,18 +306,20 @@ Questions or feedback? Reach out:
 
 ## Contributing
 
-Contributions are welcome! To contribute:
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute, and review our [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a positive and inclusive community.
+
+To contribute:
 1. Fork the repository: [https://github.com/VoxDroid/Bytey](https://github.com/VoxDroid/Bytey)
 2. Create a feature branch (`git checkout -b feature-name`)
 3. Commit changes (`git commit -m "Add feature"`)
 4. Push to the branch (`git push origin feature-name`)
 5. Open a pull request
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for more details (coming soon).
-
 ---
 
 ## Support
+
+For support, please refer to our [Support Guide](SUPPORT.md). If you encounter security issues, please review our [Security Policy](SECURITY.md).
 
 If you find this project useful, consider supporting its development:
 
@@ -330,4 +332,3 @@ If you find this project useful, consider supporting its development:
 
 **Developed by VoxDroid**  
 [GitHub](https://github.com/VoxDroid) | [Ko-fi](https://ko-fi.com/voxdroid)
-
